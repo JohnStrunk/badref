@@ -129,8 +129,8 @@ func main() {
 	for _, obj := range oc {
 		checkedObj++
 		// fmt.Printf("Checking: %v\n", obj.KindNamespaceName())
+		hasController := false
 		for _, ref := range obj.OwnerReferences {
-			hasController := false
 			owner, found := oc[ref.UID]
 			if !found {
 				// The owner doesn't exist, so nothing to check
@@ -138,11 +138,13 @@ func main() {
 				continue
 			}
 			checkedOwners++
-			if !hasController {
-				hasController = true
-			} else {
-				foundErrors = true
-				fmt.Printf("ERROR: Object %v has more than 1 controller\n", obj.KindNamespaceName())
+			if ref.Controller != nil && *ref.Controller {
+				if !hasController {
+					hasController = true
+				} else {
+					foundErrors = true
+					fmt.Printf("ERROR: Object %v has more than 1 controller\n", obj.KindNamespaceName())
+				}
 			}
 			// Check the rules
 			if !obj.IsNamespaced && owner.IsNamespaced {
