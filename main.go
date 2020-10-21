@@ -21,6 +21,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -44,9 +45,9 @@ type ObjectDescription struct {
 
 func (d ObjectDescription) KindNamespaceName() string {
 	if d.IsNamespaced {
-		return fmt.Sprintf("%v %v/%v", d.Kind, d.Namespace, d.Name)
+		return fmt.Sprintf("%v %v/%v", d.Namespace, d.Kind, d.Name)
 	}
-	return fmt.Sprintf("%v %v", d.Kind, d.Name)
+	return fmt.Sprintf("%v/%v", d.Kind, d.Name)
 }
 
 func newObjectDescription(uo unstructured.Unstructured, namespaced bool) ObjectDescription {
@@ -154,20 +155,20 @@ func main() {
 				fmt.Printf("ERROR: namespaced %v is owned by object in another namespace %v\n",
 					obj.KindNamespaceName(), owner.KindNamespaceName())
 			}
-			if ref.Kind != owner.Kind {
+			if !strings.EqualFold(ref.Kind, owner.Kind) {
 				foundErrors = true
-				fmt.Printf("ERROR: In object %v, owner ref kind does not match owner %v.\n",
-					obj.KindNamespaceName(), owner.KindNamespaceName())
+				fmt.Printf("Warning: In object %v, owner ref kind (%v) does not match owner %v (%v).\n",
+					obj.KindNamespaceName(), ref.Kind, owner.KindNamespaceName(), owner.Kind)
 			}
-			if ref.Name != owner.Name {
+			if !strings.EqualFold(ref.Name, owner.Name) {
 				foundErrors = true
-				fmt.Printf("ERROR: In object %v, owner ref name does not match owner %v.\n",
-					obj.KindNamespaceName(), owner.KindNamespaceName())
+				fmt.Printf("Warning: In object %v, owner ref name (%v) does not match owner %v (%v).\n",
+					obj.KindNamespaceName(), ref.Name, owner.KindNamespaceName(), owner.Name)
 			}
-			if ref.APIVersion != owner.APIVersion {
+			if !strings.EqualFold(ref.APIVersion, owner.APIVersion) {
 				foundErrors = true
-				fmt.Printf("ERROR: In object %v, owner ref APIVersion does not match owner %v.\n",
-					obj.KindNamespaceName(), owner.KindNamespaceName())
+				fmt.Printf("Warning: In object %v, owner ref APIVersion (%v) does not match owner %v (%v).\n",
+					obj.KindNamespaceName(), ref.APIVersion, owner.KindNamespaceName(), owner.APIVersion)
 			}
 		}
 	}
@@ -179,6 +180,6 @@ func main() {
 		fmt.Printf("=== ERRORS FOUND ===\n")
 		os.Exit(1)
 	} else {
-		fmt.Printf("All ok!\n")
+		fmt.Printf("All OK!\n")
 	}
 }
