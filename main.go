@@ -51,7 +51,6 @@ func (d ObjectDescription) KindNamespaceName() string {
 }
 
 func newObjectDescription(uo unstructured.Unstructured, namespaced bool) ObjectDescription {
-	uo.GetAPIVersion()
 	return ObjectDescription{
 		APIVersion:      uo.GetAPIVersion(),
 		Kind:            uo.GetKind(),
